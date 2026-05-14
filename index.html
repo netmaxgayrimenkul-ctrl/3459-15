@@ -213,7 +213,7 @@ body {
 #soundBtn {
   position: fixed;
   right: 16px;
-  bottom: 30px;
+  bottom: 50px;
   width: 35px;
   height: 35px;
   display: flex;
@@ -255,8 +255,8 @@ body {
 }
 
 .topbar-title{
-  font-size:19px; font-weight:700; color:#ffffff;
-  text-align:center; padding:5px 5px; background:rgba(255,255,255,0.04);
+  font-size:20px; font-weight:700; color:#ffffff;
+  text-align:center; padding:5px 0; background:rgba(255,255,255,0.04);
 }
 
 .topbar-subtitle{
@@ -443,12 +443,55 @@ body {
     transform: scale(1.2); /* Fare üzerine gelince büyümesi için */
 }
 
+/* ===================================================== */
+/*  UÇUŞ TANITIM YAZISI ÖZELLİKLERİ                      */
+/* ===================================================== */
+.flight-overlay-text {
+    /* Konumlama - İstediğin %15 ve orta hizalama */
+    position: absolute;
+    bottom: 15%; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Görsel Stil - Topbar'dan gelen doku */
+    background: rgba(0, 0, 0, 0.88);
+    border-radius: 5px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    z-index: 99999;
+    
+    /* Yazı Özellikleri */
+    color: #FFD700;
+    font-size: 15px; /* Okunabilirlik için hafif optimize edildi */
+    font-weight: 700;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    text-align: center;
+    padding: 5px 5px;
+    letter-spacing: 2px;
+    white-space: nowrap; /* Yazının tek satır kalması için */
+    
+    border-left: 3px solid #ffb800;
+
+    /* Animasyon Geçişi */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+}
+
+/* Yazı göründüğünde devreye girecek stil (JS ile opacity 1 olunca) */
+.flight-overlay-text[style*="opacity: 1"] {
+    transform: translateX(-50%) translateY(0);
+}
+
+
+
 </style>
 </head>
 
 <body>
 
 <div id="map"></div>
+
+<div id="flight-title" class="flight-overlay-text">Satılık Lüks Müstakil Villa</div>
 
 <!-- Final Slogan Ekranı (Başlangıçta gizli) -->
 <div id="final-slogan-screen" class="final-overlay">
@@ -524,7 +567,7 @@ body {
   <div class="carousel-item" data-index="7">
     <img src="images/8.jpg" class="carousel-img">
 	<div class="carousel-info">
-      <span class="info-title">GENİŞ BALKONLAR</span>
+      <span class="info-title">GENİŞ BALKON</span>
     </div>
   </div>
   
@@ -829,23 +872,18 @@ map.addSource('google-tiles', {
 const el = document.createElement('div');
 el.className = 'bina-marker';
 el.style.backgroundImage = 'url("images/1.jpg")'; 
-el.style.width = '80px';  // Genişliği biraz artırabilirsiniz
+el.style.width = '80px'; 
 el.style.height = '80px'; 
-// ÖNEMLİ DEĞİŞİKLİKLER:
-el.style.opacity = '0.8';
-el.style.backgroundSize = 'contain'; // Resmin tamamını kutuya sığdırır
-el.style.backgroundRepeat = 'no-repeat'; // Resmin tekrar etmesini önler
-el.style.backgroundPosition = 'center'; // Resmi kutunun ortasına hizalar
-el.style.borderRadius = '50%'; // Kırpılma olmaması için radius'u sıfırlayın veya azaltın
-el.style.border = '2px solid white'; // Yanlardaki çizgiler border olabilir, bunu kaldırın
-el.style.boxShadow = 'none'; // Yanlardaki çizgiler gölge kalıntısı olabilir, bunu kaldırın
+el.style.backgroundSize = 'cover'; // DEĞİŞTİ: Kutuyu tam doldursun
+el.style.backgroundPosition = 'center';
+el.style.borderRadius = '50%';
+el.style.border = '2px solid white';
+el.style.opacity = '1'; // DEĞİŞTİ: 0.8 yerine 1 yap ki efekt net görünsün
 
 window.binaResimMarker = new mapboxgl.Marker({
     element: el,
     anchor: 'center'
-})
-  .setLngLat([34.002346, 38.394934]) 
-  .addTo(map);
+}).setLngLat([34.002346, 38.394934]).addTo(map);
 
 
 
@@ -1103,42 +1141,50 @@ map.addLayer({
 
 // 🚀 HARİTA AÇILDIKTAN TAM 10 SANİYE SONRA BAŞLAYACAK ANA BLOK
 setTimeout(() => {
-
-  // 1️⃣ PANEL GÖRÜNSÜN
+  // 1️⃣ PANEL VE YAZI GÖRÜNSÜN
   const panel = document.getElementById("flightPanel");
+  const title = document.getElementById("flight-title");
+  
   if (panel) {
     panel.style.opacity = "1";
     panel.style.transform = "translateY(0)";
   }
+  
+  if (title) {
+    title.style.opacity = "1"; // Yazı burada görünür oluyor
+  }
+  
+  setTimeout(() => {
+        title.style.opacity = "0";
+        title.style.transform = "translateX(-50%) translateY(-20px)"; // Hafif yukarı süzülerek gitsin
+    }, 8000); // 8000ms = 8 Saniye
+ 
 
-  // 2️⃣ DRONE (VTOL) OLUŞTUR VE GÖRÜNÜR YAP
-	  if (!droneMarker) {
-            const droneEl = document.createElement("img");
-            droneEl.src = "images/vtol-3.png";
-            droneEl.style.width = "110px";
-            droneEl.style.opacity = "0";
-            droneEl.style.transition = "opacity 1.5s ease";
+  // 2️⃣ DRONE (VTOL) OLUŞTUR
+  if (!droneMarker) {
+    const droneEl = document.createElement("img");
+    droneEl.src = "images/vtol-3.png";
+    droneEl.style.width = "110px";
+    droneEl.style.opacity = "0";
+    droneEl.style.transition = "opacity 1.5s ease";
 
-            droneMarker = new mapboxgl.Marker({
-                element: droneEl,
-                anchor: "center",
-                rotationAlignment: "map",
-                rotation: initialBearing // 🔥 Doğarken rotaya uygun doğar
-            })
-            .setLngLat(route[0])
-            .addTo(map);
+    droneMarker = new mapboxgl.Marker({
+      element: droneEl,
+      anchor: "center",
+      rotationAlignment: "map",
+      rotation: initialBearing
+    })
+    .setLngLat(route[0])
+    .addTo(map);
 
-            currentDroneRotation = initialBearing; // Senkronizasyon
+    currentDroneRotation = initialBearing;
+    setTimeout(() => { droneEl.style.opacity = "1"; }, 100);
+  }
 
-            setTimeout(() => { droneEl.style.opacity = "1"; }, 100);
-        }
-
-  // 3️⃣ UÇUŞ FONKSİYONUNU TETİKLE
-  // 10. saniyede her şey görünür olduğu an bu fonksiyon başlar.
-  // İçindeki 4 saniyelik WAIT_TIME (yükselme) burada işlemeye başlar.
+  // 3️⃣ UÇUŞU BAŞLAT
   startSmoothRoute();
 
-}, 10000); // 10000ms = 10 Saniye Tam Gecikme
+}, 10000);
 
 
 
@@ -1172,16 +1218,13 @@ function updateAltitude() {
 map.on("move", updateAltitude);
 
 function startSmoothRoute() {
-
-let lastDistanceCovered = 0; 
-
+  let lastDistanceCovered = 0; 
   const zoomElement = document.getElementById("zoom-level");
   if (zoomElement) zoomElement.classList.add("hide");
 
   const totalDuration = 15000;
   const climbDuration = 4000;
   const targetPitch = 15;
-
   const WAIT_TIME = 4000; // ✅ ilk 4 saniye bekleme
 
   let startTime = null;
@@ -1190,6 +1233,7 @@ let lastDistanceCovered = 0;
   const speedElement = document.getElementById("speedInfo");
   const timeElement = document.getElementById("timeInfo");
   const altitudeElement = document.getElementById("altitudeInfo");
+  const titleElement = document.getElementById("flight-title"); // 📝 Yazı elementi
 
   lastSpeedTime = null;
   lastSpeedPosition = null;
@@ -1201,18 +1245,11 @@ let lastDistanceCovered = 0;
   function getDistance(a, b) {
     const R = 6371000;
     const toRad = x => x * Math.PI / 180;
-
     const dLat = toRad(b[1] - a[1]);
     const dLng = toRad(b[0] - a[0]);
-
     const lat1 = toRad(a[1]);
     const lat2 = toRad(b[1]);
-
-    const h =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1) * Math.cos(lat2) *
-      Math.sin(dLng / 2) ** 2;
-
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(h));
   }
 
@@ -1227,31 +1264,25 @@ let lastDistanceCovered = 0;
     totalDistance += getDistance(route[i], route[i + 1]);
   }
 
-	const averageSpeedMS = Math.min(totalDistance / (totalDuration / 1000), 20);
-	const MAX_SPEED_MS = averageSpeedMS;
+  const averageSpeedMS = Math.min(totalDistance / (totalDuration / 1000), 20);
 
-  // animate dışına, startSmoothRoute içine bu değişkeni ekle
-
-
-function animate(time) {
+  function animate(time) {
     if (!startTime) startTime = time;
     const elapsed = time - startTime;
 
-    // 1️⃣ İLK 4 SANİYE: KALKIŞ VE HIZLANMA
-	if (elapsed < WAIT_TIME) {
-        // 1. İlerleme yüzdesini hesapla (0 ile 1 arası)
+    // 1️⃣ İLK 4 SANİYE: KALKIŞ VE YAZININ BELİRMESİ
+    if (elapsed < WAIT_TIME) {
         const progress = Math.min(elapsed / WAIT_TIME, 1);
-        
-        // 2. Yumuşak geçiş eğrisi (Ease Out)
         const ease = 1 - Math.pow(1 - progress, 3);
         
-        // 3. Hız ve İrtifa Hesaplama (0'dan hedefe tırmanış)
+        // Yazıyı havalanma ile birlikte göster
+        if (titleElement) titleElement.style.opacity = progress;
+
         const acceleratingSpeed = averageSpeedMS * progress; 
         const currentZoom = map.getZoom();
         const targetAltitude = getAltitudeFromZoom(currentZoom);
-        const currentClimbAlt = targetAltitude * ease; // Tam 0'dan başlar
+        const currentClimbAlt = targetAltitude * ease;
 
-        // 4. Harita ve Görsel Ayarlar
         map.setPitch(targetPitch * ease);
         
         const startLng = route[0][0];
@@ -1269,12 +1300,7 @@ function animate(time) {
             currentDroneRotation = startRotation;
         }
 
-        smoothLng = startLng;
-        smoothLat = startLat;
-
-        // 5. Panel Güncelleme (Hepsi Senkron)
         timeElement.innerText = "Flight Time: " + Math.floor(elapsed / 1000) + " sn";
-        distanceElement.innerText = "Dist to Home: 0.00 km";
         speedElement.innerText = "GroundSpeed: " + acceleratingSpeed.toFixed(1) + " m/s";
         altitudeElement.innerText = "Altitude: ~" + Math.round(currentClimbAlt) + " m";
 
@@ -1282,30 +1308,25 @@ function animate(time) {
         return;
     }
 
-    // 2️⃣ ANA HESAPLAMA
+    // 2️⃣ ANA UÇUŞ HESAPLAMASI
     let t = (elapsed - WAIT_TIME) / (totalDuration - WAIT_TIME);
-    t = Math.min(t, 1.30); // %15'lik bir ek süre/mesafe payı bırakıyoruz (o 3 saniye için)
+    t = Math.min(t, 1.30); 
 
-    // Uçağın gitmesi gereken hedef mesafe
     let targetDistance = t * totalDistance;
 
-    // 🛑 FREN MEKANİZMASI (Hız Limitleyici)
-    // Uçak yolun %90'ine vardığında fren yapmaya başlar
+    // 🛑 FREN MEKANİZMASI
     if (t > 0.90) {
-        // Kalan mesafe azaldıkça uçak her karede en fazla "maxStep" kadar ilerleyebilir
         const remainingDist = totalDistance - lastDistanceCovered;
-        // Kalan mesafe azaldıkça hızı (step'i) düşür
         const maxStep = Math.max(0.02, remainingDist * 0.02); 
-        
         if ((targetDistance - lastDistanceCovered) > maxStep) {
             targetDistance = lastDistanceCovered + maxStep;
         }
     }
 
     const distanceCovered = targetDistance;
-    lastDistanceCovered = distanceCovered; // Bir sonraki kare için kaydet
+    lastDistanceCovered = distanceCovered;
 
-    // 3️⃣ PANEL GÜNCELLEMELERİ (Senin orijinal kısımların)
+    // 3️⃣ PANEL GÜNCELLEMELERİ
     if (lastSpeedTime !== null && lastSpeedPosition && droneMarker) {
         const currentPos = droneMarker.getLngLat().toArray();
         const dt = (time - lastSpeedTime) / 1000;
@@ -1321,7 +1342,7 @@ function animate(time) {
     distanceElement.innerText = "Dist to Home: " + (distanceCovered / 1000).toFixed(2) + " km";
     timeElement.innerText = "Flight Time: " + Math.floor(elapsed / 1000) + " sn";
 
-    // 4️⃣ ROTA TAKİBİ VE DÖNÜŞ (Senin orijinal döngün)
+    // 4️⃣ ROTA TAKİBİ
     let traveled = 0;
     for (let i = 0; i < route.length - 1; i++) {
         const segment = getDistance(route[i], route[i + 1]);
@@ -1333,24 +1354,17 @@ function animate(time) {
             map.easeTo({ center: [lng, lat], pitch: targetPitch, duration: 0 });
 
             if (droneMarker) {
-                // 1️⃣ Önce marker'ın şu anki koordinatlarını alalım
                 const currentMarkerPos = droneMarker.getLngLat();
-                
-                // 2️⃣ Hedef (lng, lat) ile mevcut konum arasındaki farkı yumuşatalım (%15 yaklaşma)
-                // Bu satır titremeyi (jitter) emer.
                 const finalLng = currentMarkerPos.lng + (lng - currentMarkerPos.lng) * 0.15;
                 const finalLat = currentMarkerPos.lat + (lat - currentMarkerPos.lat) * 0.15;
 
-                // 3️⃣ Rotasyon hesaplaması (Senin orijinal kodun)
                 const targetRotation = getBearing(route[i], route[i + 1]);
                 if (currentDroneRotation === null) currentDroneRotation = targetRotation;
                 let diff = (targetRotation - currentDroneRotation + 540) % 360 - 180;
                 currentDroneRotation += diff * 0.03;
 
-                // 4️⃣ Marker'ı artık yumuşatılmış (final) koordinata koyuyoruz
                 droneMarker.setLngLat([finalLng, finalLat]).setRotation(currentDroneRotation);
                 
-                // 5️⃣ Kamera takibi (Senin orijinal kodun)
                 const currentMapBearing = map.getBearing();
                 let bDiff = (currentDroneRotation - currentMapBearing + 540) % 360 - 180;
                 const maxStepRot = 0.3; 
@@ -1363,27 +1377,13 @@ function animate(time) {
         traveled += segment;
     }
 
-    // 5️⃣ BİTİŞ KONTROLÜ
-    // Uçak hedefe çok yaklaştığında (örn: son 10cm) durdur
+    // 5️⃣ BİTİŞ KONTROLÜ VE YAZIYI SİLME
     if (totalDistance - distanceCovered > 0.1) {
         requestAnimationFrame(animate);
     } else {
-        startRotation();
+	
+        if (typeof startRotation === "function") startRotation();
     }
-}
-
-  function updateClimb(elapsed) {
-
-    const currentZoom = map.getZoom();
-    const zoomAltitude = getAltitudeFromZoom(currentZoom);
-
-    const progress = Math.min(elapsed / climbDuration, 1);
-    const easeOut = 1 - Math.pow(1 - progress, 3);
-
-    const climbAltitude = zoomAltitude * easeOut;
-
-    altitudeElement.innerText =
-      "Altitude: ~" + Math.round(climbAltitude) + " m";
   }
 
   requestAnimationFrame(animate);
@@ -1483,135 +1483,103 @@ function startRotation() {
       }
 
       // 2. Sinematik Dalış (Drone varsa)
-      if (droneMarker) {
-        const targetCoord = [34.002331, 38.394933];
-        const el = droneMarker.getElement();
+			if (droneMarker) {
+			const targetCoord = [34.002331, 38.394933];
+			const droneEl = droneMarker.getElement();
 
-        // Drone görsel efekti
-        el.style.transition = `all 1500ms cubic-bezier(0.6, 0.04, 0.98, 0.33)`; 
-        el.style.opacity = "0";
-        el.style.transform = "scale(12) translateY(120px)";
-
-        // Harita dalış efekti
-        map.flyTo({
-          center: targetCoord,
-          zoom: 19,
-          pitch: 80,
-          bearing: map.getBearing(),
-          speed: 2.5,
-          curve: 1.5,
-          essential: true
-        });
-
-        droneMarker.setLngLat(targetCoord);
-
-        // 3. Katmanları Eriterek Sil
-        const allLayers = map.getStyle().layers;
-	// --- KATMANLARI GİZLEME DÖNGÜSÜ ---
-	allLayers.forEach(layer => {
-		// Gizlenecek ID'ler: Google altlığı, senin eklediğin okul/yol etiketleri ve parsel kaynakları
-		const targetIds = ['google-tiles-layer', 'ookul-label-layer', 'yol-label'];
-		
-		// Eğer katman ID'si listedeyse, source parselse veya ID'sinde 'label' geçiyorsa içeri gir
-		if (targetIds.includes(layer.id) || layer.source === 'parsel' || layer.id.includes('label')) {
+			// 1️⃣ DRONE & BİNA GÖRSEL EFEKTİ
 			
-			const type = layer.type;
-			let opacityProp;
+			// DRONE: Süreyi 2 saniyeye (2000ms) çıkardık ve yukarı fırlama (translateY) ekledik
+			droneEl.style.transition = "transform 2000ms ease-in, opacity 2000ms ease-in";
+			droneEl.style.transformOrigin = "center center";
+			// Drone hem küçülür hem de gökyüzüne doğru (yukarı) fırlar
+			droneEl.style.transform = "translateY(-500px) scale(0.1)";
+			droneEl.style.opacity = "0";
 
-			// KRİTİK: Yazıların (128.Cd. vb.) gitmesi için 'text-opacity' seçilmeli
-			if (type === 'symbol') {
-				opacityProp = 'text-opacity'; 
-			} else if (type === 'raster') {
-				opacityProp = 'raster-opacity';
-			} else if (type === 'line') {
-				opacityProp = 'line-opacity';
-			} else {
-				opacityProp = 'fill-opacity';
-			}
+			// BİNA RESMİ: Drone kalkmaya başladıktan hemen sonra (örneğin 1200ms sonra) patlasın
+			if (window.binaResimMarker) {
+    const binaEl = window.binaResimMarker.getElement();
+    
+    // Gecikmeyi 300'e kadar çekebilirsin, uçağın kalkışıyla neredeyse aynı anda olur
+    setTimeout(() => {
+        // 🚀 KRİTİK: transform süresini 800'den 400'e çektik (Hızlı patlama efekti)
+        // opacity süresini 1500 yaptık ki ekran bir anlığına bembeyaz/resimle dolsun
+        binaEl.style.transition = "transform 400ms cubic-bezier(0.17, 0.67, 0.83, 0.67), opacity 1500ms ease-in, border-radius 200ms";
+        
+        binaEl.style.transformOrigin = "center center";
 
-			// Yumuşak geçiş efektini (400ms) tanımla
-			map.setPaintProperty(layer.id, `${opacityProp}-transition`, {duration: 400});
-			
-			// Değeri 0 yaparak ekrandan tamamen sil
-			map.setPaintProperty(layer.id, opacityProp, 0);
+        // Tarayıcıyı zorlamak için küçük bir hile (Reflow)
+        void binaEl.offsetWidth; 
 
-			// Sembol katmanlarında ikon (marker görseli) varsa onu da gizle
-			if (type === 'symbol') {
-				map.setPaintProperty(layer.id, 'icon-opacity', 0);
-			}
-		}
-	});
-
-// --- RESİM MARKER'INI VE HAYALET ÇİZGİLERİ KALDIR ---
-if (window.binaResimMarker) {
-    window.binaResimMarker.remove();
-    window.binaResimMarker = null;
+        // Efekti uygula
+        binaEl.style.transform = "translateY(-150px) scale(30)"; // Daha büyük scale, daha hızlı hissettirir
+        binaEl.style.opacity = "0";
+    }, 100); 
 }
 
-// Ekrandaki tüm .bina-marker elementlerini fiziksel olarak temizle
-document.querySelectorAll('.bina-marker').forEach(el => el.remove());
+			// 2️⃣ HARİTA DALIŞ (FLYTO)
+			map.flyTo({
+				center: targetCoord,
+				zoom: 19.5,
+				pitch: 85,
+				speed: 1.8,
+				curve: 1,
+				essential: true
+			});
 
-	// --- BİNA RESMİNİ (MARKER) EKRANDAN TEMİZLEME ---
+			// 3️⃣ TÜM NESNELERİ (KATMANLARI) ERİTEREK SİL
+			const allLayers = map.getStyle().layers;
+			allLayers.forEach(layer => {
+				const targetIds = ['google-tiles-layer', 'ookul-label-layer', 'yol-label', 'hayalet-cizgi'];
+				
+				if (targetIds.includes(layer.id) || layer.source === 'parsel' || layer.id.includes('label')) {
+					const type = layer.type;
+					let opacityProp;
 
-	// 1. Mapbox nesnesi üzerinden kaldır (Eğer window.binaResimMarker olarak tanımladıysanız)
-	if (window.binaResimMarker) {
-		window.binaResimMarker.remove();
-		window.binaResimMarker = null; 
-	}
+					if (type === 'symbol') opacityProp = 'text-opacity'; 
+					else if (type === 'raster') opacityProp = 'raster-opacity';
+					else if (type === 'line') opacityProp = 'line-opacity';
+					else opacityProp = 'fill-opacity';
 
-	// 2. KESİN ÇÖZÜM: HTML üzerinde 'bina-marker' sınıfına sahip ne varsa zorla sil
-	// Bu kısım, değişken kaybolsa bile ekrandaki resmi fiziksel olarak kaldırır.
-	const elements = document.getElementsByClassName('bina-marker');
-	while(elements.length > 0){
-		elements[0].parentNode.removeChild(elements[0]);
-	}
+					map.setPaintProperty(layer.id, `${opacityProp}-transition`, {duration: 1500}); // Drone ile uyumlu süreyi artırdık
+					map.setPaintProperty(layer.id, opacityProp, 0);
+					
+					if (type === 'symbol') {
+						map.setPaintProperty(layer.id, 'icon-opacity-transition', {duration: 1500});
+						map.setPaintProperty(layer.id, 'icon-opacity', 0);
+					}
+				}
+			});
 
-		// --- YENİ RESİM MARKER'INI KALDIR ---
-		// Eğer binaResimMarker değişkeni tanımlıysa onu haritadan siler
-		if (typeof binaResimMarker !== 'undefined' && binaResimMarker !== null) {
-		  binaResimMarker.remove();
-		}
-		
-		// 2. Marker'ı (Turuncu İşaretçi) Haritadan Kaldır
-		if (typeof schoolMarker !== 'undefined' && schoolMarker !== null) {
-		  schoolMarker.remove();
-		}
-
-        // 4. Nihai Temizlik ve UI Başlatma
+			// 4️⃣ NİHAİ TEMİZLİK VE UI BAŞLATMA
+			// Süreyi drone'un yeni süresine (2000ms) göre güncelledik
 			setTimeout(() => {
-		// 1. Drone ve Harita Kaynaklarını Temizle
-		if (droneMarker) { 
-			droneMarker.remove(); 
-			droneMarker = null; 
-		}
-		
-		map.getStyle().layers.forEach((layer) => {
-			if (layer.source === 'parsel' || layer.source === 'google-tiles') {
-				map.removeLayer(layer.id);
-			}
-		});
-		
-		if (map.getSource('google-tiles')) {
-			map.removeSource('google-tiles');
-		}
+				if (droneMarker) { droneMarker.remove(); droneMarker = null; }
+				
+				const elements = document.getElementsByClassName('bina-marker');
+				while(elements.length > 0){
+					elements[0].parentNode.removeChild(elements[0]);
+				}
 
-		// 2. UI ELEMANLARINI VE CAROUSEL'İ ANINDA BAŞLAT
-		// Bekletme yapan iç içe setTimeout'lar kaldırıldı.
-		
-		showTopbarAfterRotation(); // Üst bar gelsin
+				if (typeof schoolMarker !== 'undefined' && schoolMarker) schoolMarker.remove();
 
-		const bottomLogo = document.getElementById("bottom-logo");
-		if (bottomLogo) {
-			bottomLogo.classList.add("show"); // Alt logo gelsin
+				map.getStyle().layers.forEach((layer) => {
+					if (layer.source === 'parsel' || layer.source === 'google-tiles') {
+						map.removeLayer(layer.id);
+					}
+				});
+
+				showTopbarAfterRotation();
+				const bottomLogo = document.getElementById("bottom-logo");
+				if (bottomLogo) bottomLogo.classList.add("show");
+
+				if (typeof startCarousel === 'function') {
+					console.log("🚀 Sahne hazır, Carousel başlıyor.");
+					startCarousel();
+				}
+
+			}, 2000); // 1500'den 2000'e çıktı
 		}
-
-		if (typeof startCarousel === 'function') {
-			console.log("🚀 Dalış bitti, Carousel anında başlatıldı.");
-			startCarousel(); // Carousel beklemeden başlasın
-		}
-
-	}, 1500); // Sadece uçağın hedefe varış süresi kadar bekler
-      }
     }
 
     // Animasyonu başlat
